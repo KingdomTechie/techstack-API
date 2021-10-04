@@ -15,7 +15,8 @@ mongoose.connect("mongodb://localhost:27017/wikiDB")
 
 const articleSchema = new mongoose.Schema({
     title: "String",
-    content: "String"
+    content: "String",
+    tags: ["String"]
 });
 
 const Article = new mongoose.model("Article", articleSchema)
@@ -47,11 +48,11 @@ app.route("/articles")
         Article.find({}, (err, foundArticles) => {
             if(err) console.log(err);
             res.send(foundArticles)
-            console.log(foundArticles);
+            // console.log(foundArticles);
         });
     })
     .post( async (req, res) => {
-        await Article.create({title: _.upperFirst(req.body.title), content: req.body.content}, (err, createdArticle) => {
+        await Article.create({title: req.body.title, content: req.body.content, tags: req.body.tags}, (err, createdArticle) => {
             if (err) console.log(err);
             console.log(`${createdArticle.title} was created in the database`);
             res.send("Successfully added the new article")
@@ -82,7 +83,7 @@ app.route("/articles/:articleTitle")
     .put((req, res) => {
         Article.findOneAndUpdate(
             {title: req.params.articleTitle}, 
-            {title: req.body.title, content: req.body.content}, 
+            {title: req.body.title, content: req.body.content, tags: req.body.tags}, 
             {overwrite: true}, 
             (err, updatedArticle) => {
             if(err) console.log(err, "Article has NOT been updated");
@@ -91,6 +92,8 @@ app.route("/articles/:articleTitle")
         })
     })
     .patch((req, res) => {
+
+        console.log(req.body);
 
         Article.findOneAndUpdate(
             {title: req.params.articleTitle}, 
@@ -101,6 +104,16 @@ app.route("/articles/:articleTitle")
             if(err) console.log(err, "Article has NOT been updated");
 
             res.redirect("/articles");
+        })
+    })
+    .delete((req, res) => {
+        Article.findOneAndDelete({title: req.params.articleTitle}, (err, deletedArticle) => {
+
+            if(err) console.log(err, "Did NOT delete article");
+
+            console.log("Successfully deleted article", deletedArticle);
+
+            res.redirect("/articles")
         })
     })
 
